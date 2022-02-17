@@ -23,6 +23,14 @@ public class TestAccounts
         account.close();
         System.out.println("Total number of accounts after deleting account: " + Account.getNumAccounts());
         System.out.println("\nCreated account " + account);
+        
+        //Consolidate
+        Account account1=new Account(5000,"Vini");
+        Account account2=new Account(5000,"Vini");
+        Account.consolidate(account1,account2);
+        System.out.println(Account.getNumAccounts());
+        System.out.println(account1);
+        System.out.println(account2);
 
 
 
