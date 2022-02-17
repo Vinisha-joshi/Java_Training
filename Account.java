@@ -91,7 +91,23 @@ package Homework;
         //----------------------------------------------
         // Consolidates 2 accounts
         //----------------------------------------------
-
+        
+        public static Account consolidate(Account account1,Account account2)
+        {
+            if(account1.getAcctNumber()==account2.getAcctNumber())
+            {
+                System.out.println("Both Account Have Same Account Number So Cant Be Consolidate");
+                return null;
+            }
+            if(account1.getName()==account2.getName())
+            {
+                account1.balance=account1.balance+account2.balance;
+                account2.balance=0;
+                account2.close();
+                numAccounts--;
+            }
+            return account1;
+        }
 
 
         //----------------------------------------------
