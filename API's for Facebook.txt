@@ -1,0 +1,45 @@
+Facebook question
+1. Create Account 
+   Method--> POST
+   API-->https://www.facebook.com/create
+   {
+    "name":"",
+    "userID" : "",
+    "password":""
+    }
+
+2. Follow user 
+   Method--> POST/PUT
+   API--> https://www.facebook.com/follow
+   {
+    "userID" : "" 
+    "followUserID" : ""
+    }
+
+3. Friend another user 
+   Method--> POST/PUT
+   https://www.facebook.com/friend
+   {
+    "userID" : "" 
+    "friendUserID" : ""
+    }
+
+4. Unfriend 
+   Method--> DELETE
+   API--> https://www.facebook.com/unfriend
+   {
+    "userID" : "" 
+    "friendUserID" : ""
+    }
+
+5. Post
+   Method--> POST
+   API--> https://www.facebook.com/post
+   {
+    "userID" : ""
+    "post" : ""
+    }
+
+6. Likes 
+   Method--> GET
+   API--> https://www.facebook.com/likes?userId=123&post=12345
