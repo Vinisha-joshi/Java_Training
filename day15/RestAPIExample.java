@@ -141,8 +141,10 @@ public class RestAPIExample {
 
     //create tweet
     @PostMapping("/createTweet")
-    List<String> createTweet(@RequestBody Tweet tweet){
+    ResponseEntity<String>  createTweet(@RequestBody Tweet tweet,@RequestParam String password){
+        ResponseEntity<String> responseEntity = null;
         String email = tweet.getEmail();
+        if(password.equals(userProfile.get(email).getPassword())){
         if(userProfile.containsKey(email)) {
             if(tweets.get(email) != null)
                 tweets.get(email).add(tweet);
@@ -151,10 +153,13 @@ public class RestAPIExample {
                 list.add(tweet);
                 tweets.put(email, list);
             }
-            return Arrays.asList(tweet.toString());
+            return new ResponseEntity<>("Tweet post succesfull",HttpStatus.OK);
         }
         else
-            return Arrays.asList("User is not registered");
+            return new ResponseEntity<>("User is not registered",HttpStatus.BAD_REQUEST);
+    }else {
+            return new ResponseEntity<>(" wrong Password",HttpStatus.BAD_REQUEST);
+        }
     }
     //Fetch all tweets
     @GetMapping("/fetchTweets")
