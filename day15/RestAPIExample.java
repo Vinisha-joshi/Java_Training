@@ -1,8 +1,15 @@
 package day15;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -12,11 +19,75 @@ public class RestAPIExample {
     private Map<String,List<Tweet>> tweets = new HashMap<>();
     private Map<String,List<String>> following=new HashMap<>();
 
+//    @GetMapping("/displayUserDetails")
+//    public ModelAndView getUserDetails() {
+//        ModelAndView modelAndView = new ModelAndView("users");
+//        if (userProfile.isEmpty())
+//            allAccDetails();
+//        List<User> users = new ArrayList<>();
+//        for(Map.Entry entry: userProfile.entrySet()){
+//            users.add((User)entry.getValue());
+//        }
+//        modelAndView.getModel().put("users", users);
+//        return modelAndView;
+//    }
+//
+//        @GetMapping("/login")
+//        public ModelAndView form() {
+//            ModelAndView modelAndView = new ModelAndView("login");
+//            return modelAndView;
+//        }
+@GetMapping("/displayUserDetails")
+public ModelAndView getUserDetails(@RequestParam String email,String password) {
+    ModelAndView modelAndView = new ModelAndView("users");
+    Session session = getSession(User.class);
+    List<Object[]> list = session.createQuery("select name,email,password from users ", Object[].class).getResultList();
+    for (int i = 0; i < list.size(); i++) {
+        Object[] arr = list.get(i);
+        User user = new User(arr[0].toString(), arr[1].toString(), arr[2].toString());
+        userProfile.put(arr[1].toString(), user);
+    }
+
+    if (userProfile.containsKey(email)) {
+        if (userProfile.get(email).getPassword().equals(password)) {
+            //   responseEntity = new ResponseEntity<>(userProfile.get(email), HttpStatus.OK);
+
+            if (userProfile.isEmpty())
+                allAccDetails();
+            List<User> users = new ArrayList<>();
+            for (Map.Entry entry : tweets.entrySet()) {
+                users.add((User) entry.getValue());
+            }
+            modelAndView.getModel().put("users", users);
+            System.out.println(users);
+            return modelAndView;
+        }
+        else {
+            //  responseEntity = new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            System.out.println("Wrong Password");
+        }
+    } else {
+        //  responseEntity = new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        System.out.println("User is not registered");
+
+    }
+    // return responseEntity;
+    session.close();
+    return login();
+}
+    @GetMapping("/login")
+    public ModelAndView login() {
+        ModelAndView modelAndView = new ModelAndView("login");
+        return modelAndView;
+    }
+
     //User can create an account  -->POST
     @PostMapping("/create")
     private ResponseEntity<String>  createAccount(@RequestBody User user) {
         ResponseEntity<String>responseEntity=null;
         String email = user.getEmail();
+        Session session=getSession(User.class);
+        Transaction transaction = session.beginTransaction();
         if(userProfile.containsKey(user.getEmail()))
         {
             responseEntity = new ResponseEntity<>("User already exits",
@@ -24,6 +95,9 @@ public class RestAPIExample {
         }
         else {
             userProfile.put(email, user);
+            session.persist(user);
+            transaction.commit();
+            session.close();
             responseEntity=new ResponseEntity<>("User registered successfully",HttpStatus.OK);
         }
         return responseEntity;
@@ -32,7 +106,16 @@ public class RestAPIExample {
     //User can fetch All account details --> GET
     @GetMapping("/fetch")
     Map<String,User> allAccDetails() {
+        Session session = getSession(User.class);
+        List<Object[]> list = session.createQuery("select name,email,password from users ", Object[].class).getResultList();
+        for (int i = 0; i < list.size(); i++) {
+            Object[] arr = list.get(i);
+            User user = new User(arr[0].toString(), arr[1].toString(), arr[2].toString());
+            userProfile.put(arr[1].toString(), user);
+        }
+        session.close();
         return userProfile;
+
     }
 
     //User can fetch particular account details
@@ -143,16 +226,25 @@ public class RestAPIExample {
     @PostMapping("/createTweet")
     ResponseEntity<String>  createTweet(@RequestBody Tweet tweet,@RequestParam String password){
         ResponseEntity<String> responseEntity = null;
+        Session session=getSession(Tweet.class);
+        Transaction transaction = session.beginTransaction();
+
         String email = tweet.getEmail();
         if(password.equals(userProfile.get(email).getPassword())){
         if(userProfile.containsKey(email)) {
             if(tweets.get(email) != null)
                 tweets.get(email).add(tweet);
+
             else {
                 List<Tweet> list = new ArrayList<>();
                 list.add(tweet);
                 tweets.put(email, list);
+
             }
+            session.persist(tweet);
+            transaction.commit();
+            session.close();
+
             return new ResponseEntity<>("Tweet post succesfull",HttpStatus.OK);
         }
         else
@@ -163,7 +255,23 @@ public class RestAPIExample {
     }
     //Fetch all tweets
     @GetMapping("/fetchTweets")
-    Map<String,List<Tweet>> allTweetDetails() {
+    @ResponseBody
+    Map<String, List<Tweet>> fetchTweets() {
+        Session session = getSession(Tweet.class);
+        List<Object[]> list = session.createQuery("select name,email,tweet,localDateTime from TweetTable ", Object[].class).getResultList();
+        for (int i = 0; i < list.size(); i++) {
+            Object[] arr = list.get(i);
+            Tweet tweet = new Tweet(arr[0].toString(), arr[1].toString(), arr[2].toString(), (LocalDateTime) arr[3]);
+            String email = arr[1].toString();
+            if (tweets.containsKey(email)) {
+                tweets.get(email).add(tweet);
+            } else {
+                List<Tweet> tweetList = new ArrayList<>();
+                tweetList.add(tweet);
+                tweets.put(arr[1].toString(), tweetList);
+            }
+
+        }
         return tweets;
     }
 
@@ -173,6 +281,14 @@ public class RestAPIExample {
         return  tweets.get(email);
     }
 
-
+//session method
+    public Session getSession(Class annotatedClass){
+        Configuration configuration = new Configuration();
+        configuration.configure();
+        configuration.addAnnotatedClass(annotatedClass);
+        SessionFactory sessionFactory = configuration.buildSessionFactory();
+        Session session = sessionFactory.openSession();
+        return session;
+    }
 
 }
