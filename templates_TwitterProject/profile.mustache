@@ -1,0 +1,27 @@
+<div>
+    <h1>User Profile</h1>
+    <p>{{name}}</p>
+    <p>{{email}}</p>
+    <form action="/getTweets" method="get">
+        <input hidden name="email" value={{email}}>
+        <input value="tweets" type="submit"/>
+    </form>
+    <form action="/getFollowing" method="get">
+        <input hidden name="email" value={{email}}>
+        <input value="following" type="submit"/>
+    </form>
+    <h3>Create a new Tweet: </h3>
+    <form action="/createTweet" method="post">
+        <input hidden name="email" value={{email}}>
+        <input type="text" name="content">
+        <input value="create" type="submit"/>
+    </form>
+    <h3>Follow another user: </h3>
+    <form action="/followUsers" method="post">
+        <input hidden name="email" value={{email}}>
+        <label>Enter Email address of the user to follow: </label>
+        <br><br>
+        <input type="email" name="followingEmail">
+        <input value="follow" type="submit"/>
+    </form>
+</div>
